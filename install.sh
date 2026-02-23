@@ -108,14 +108,37 @@ if [[ -f "$HOME/.config/fish/fish_plugins" && ! -L "$HOME/.config/fish/fish_plug
   mv "$HOME/.config/fish/fish_plugins" "$HOME/.config/fish/fish_plugins.backup"
 fi
 
-# Fish conf.d/tide.fish
-if [[ -f "$HOME/.config/fish/conf.d/tide.fish" && ! -L "$HOME/.config/fish/conf.d/tide.fish" ]]; then
-  echo "Haciendo backup de conf.d/tide.fish..."
-  mv "$HOME/.config/fish/conf.d/tide.fish" "$HOME/.config/fish/conf.d/tide.fish.backup"
+# Fish conf.d/solarized-osaka.fish (reemplaza tide.fish)
+if [[ -f "$HOME/.config/fish/conf.d/solarized-osaka.fish" && ! -L "$HOME/.config/fish/conf.d/solarized-osaka.fish" ]]; then
+  echo "Haciendo backup de conf.d/solarized-osaka.fish..."
+  mv "$HOME/.config/fish/conf.d/solarized-osaka.fish" "$HOME/.config/fish/conf.d/solarized-osaka.fish.backup"
 fi
+
+# Neovim config
+mkdir -p "$HOME/.config/nvim/lua/plugins"
 
 # Ejecutar stow desde el directorio de dotfiles
 cd "$DOTFILES_DIR"
 stow -v --target="$HOME" .
 
-echo "Instalación completada."
+# =============================================================================
+# Configurar iTerm2 con tema Solarized Osaka
+# =============================================================================
+echo ""
+echo "Configurando iTerm2..."
+if [[ -f "$DOTFILES_DIR/scripts/iterm-setup.sh" ]]; then
+  bash "$DOTFILES_DIR/scripts/iterm-setup.sh"
+else
+  echo "Script de iTerm2 no encontrado, omitiendo..."
+fi
+
+echo ""
+echo "========================================"
+echo "  Instalación completada!"
+echo "========================================"
+echo ""
+echo "Próximos pasos:"
+echo "  1. Reinicia iTerm2 (Cmd+Q y vuelve a abrir)"
+echo "  2. Abre Neovim y ejecuta :Lazy sync"
+echo "  3. Los colores de Fish se aplicarán automáticamente"
+echo ""
