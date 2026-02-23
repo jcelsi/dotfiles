@@ -114,8 +114,24 @@ if [[ -f "$HOME/.config/fish/conf.d/solarized-osaka.fish" && ! -L "$HOME/.config
   mv "$HOME/.config/fish/conf.d/solarized-osaka.fish" "$HOME/.config/fish/conf.d/solarized-osaka.fish.backup"
 fi
 
-# Neovim config
-mkdir -p "$HOME/.config/nvim/lua/plugins"
+# Neovim config - backup si existe y no es symlink
+if [[ -d "$HOME/.config/nvim" && ! -L "$HOME/.config/nvim" ]]; then
+  echo "Haciendo backup de configuración de nvim existente..."
+  mv "$HOME/.config/nvim" "$HOME/.config/nvim.backup.$(date +%Y%m%d_%H%M%S)"
+fi
+
+# Limpiar datos de nvim anteriores (plugins, cache, state)
+# Esto asegura una instalación limpia de los plugins de kickstart
+if [[ -d "$HOME/.local/share/nvim" ]]; then
+  echo "Limpiando plugins de nvim anteriores..."
+  rm -rf "$HOME/.local/share/nvim"
+fi
+if [[ -d "$HOME/.local/state/nvim" ]]; then
+  rm -rf "$HOME/.local/state/nvim"
+fi
+if [[ -d "$HOME/.cache/nvim" ]]; then
+  rm -rf "$HOME/.cache/nvim"
+fi
 
 # Ejecutar stow desde el directorio de dotfiles
 cd "$DOTFILES_DIR"
