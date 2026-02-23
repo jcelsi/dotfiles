@@ -1,0 +1,15 @@
+# Git
+\.git
+\.gitignore
+
+# macOS
+\.DS_Store
+
+# Stow
+\.stow-local-ignore
+
+# Scripts (no queremos symlink de install.sh en $HOME)
+install\.sh
+
+# Docs
+README\.md

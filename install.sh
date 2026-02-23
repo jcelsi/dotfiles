@@ -76,4 +76,46 @@ else
   echo "Hack Nerd Font ya está instalada, omitiendo..."
 fi
 
+# GNU Stow
+if ! command -v stow &> /dev/null; then
+  echo "Instalando GNU Stow..."
+  brew install stow
+else
+  echo "GNU Stow ya está instalado, omitiendo..."
+fi
+
+# Configurar dotfiles con stow
+echo "Configurando dotfiles con stow..."
+
+DOTFILES_DIR="$HOME/dev/dotfiles"
+
+# Crear directorio ~/.config si no existe
+mkdir -p "$HOME/.config"
+mkdir -p "$HOME/.config/fish/conf.d"
+
+# Backup y eliminar archivos existentes que serán reemplazados por symlinks
+# Solo eliminamos si NO son ya symlinks (para permitir re-ejecución del script)
+
+# Fish config.fish
+if [[ -f "$HOME/.config/fish/config.fish" && ! -L "$HOME/.config/fish/config.fish" ]]; then
+  echo "Haciendo backup de config.fish..."
+  mv "$HOME/.config/fish/config.fish" "$HOME/.config/fish/config.fish.backup"
+fi
+
+# Fish fish_plugins
+if [[ -f "$HOME/.config/fish/fish_plugins" && ! -L "$HOME/.config/fish/fish_plugins" ]]; then
+  echo "Haciendo backup de fish_plugins..."
+  mv "$HOME/.config/fish/fish_plugins" "$HOME/.config/fish/fish_plugins.backup"
+fi
+
+# Fish conf.d/tide.fish
+if [[ -f "$HOME/.config/fish/conf.d/tide.fish" && ! -L "$HOME/.config/fish/conf.d/tide.fish" ]]; then
+  echo "Haciendo backup de conf.d/tide.fish..."
+  mv "$HOME/.config/fish/conf.d/tide.fish" "$HOME/.config/fish/conf.d/tide.fish.backup"
+fi
+
+# Ejecutar stow desde el directorio de dotfiles
+cd "$DOTFILES_DIR"
+stow -v --target="$HOME" .
+
 echo "Instalación completada."
