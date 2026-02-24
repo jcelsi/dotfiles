@@ -3,3 +3,5 @@
 
 # Backup files
 *.backup
+
+.config/fish/fish_variables
