@@ -1,160 +1,127 @@
-
 #!/usr/bin/env bash
 set -e
 
-# Instala Homebrew si no está instalado
-if ! command -v brew &> /dev/null; then
-	echo "Instalando Homebrew..."
-	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-fi
-
-# Actualiza Homebrew
-echo "Actualizando Homebrew..."
-brew update
-
-# Instala aplicaciones y herramientas
-
-# iTerm2
-if [[ ! -d "/Applications/iTerm.app" ]]; then
-  echo "Instalando iTerm2..."
-  brew install --cask iterm2
-else
-  echo "iTerm2 ya está instalado, omitiendo..."
-fi
-
-# Fish
-if ! command -v fish &> /dev/null; then
-  echo "Instalando Fish..."
-  brew install fish
-  echo "/opt/homebrew/bin/fish" | sudo tee -a /etc/shells
-  chsh -s /opt/homebrew/bin/fish
-else
-  echo "Fish ya está instalado, omitiendo..."
-fi
-
-# Fisher (plugin manager para Fish)
-if ! fish -c "type -q fisher" &> /dev/null; then
-  echo "Instalando Fisher..."
-  fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher"
-else
-  echo "Fisher ya está instalado, omitiendo..."
-fi
-
-# Instalar/actualizar plugins de Fish
-echo "Instalando plugins de Fish..."
-fish -c "fisher update"
-
-# Neovim
-if ! command -v nvim &> /dev/null; then
-  echo "Instalando Neovim..."
-  brew install neovim
-else
-  echo "Neovim ya está instalado, omitiendo..."
-fi
-
-# tmux
-if ! command -v tmux &> /dev/null; then
-  echo "Instalando tmux..."
-  brew install tmux
-else
-  echo "tmux ya está instalado, omitiendo..."
-fi
-
-# fzf (requerido para fzf.fish)
-if ! command -v fzf &> /dev/null; then
-  echo "Instalando fzf..."
-  brew install fzf
-else
-  echo "fzf ya está instalado, omitiendo..."
-fi
-
-# Hack Nerd Font
-if ! brew list --cask font-hack-nerd-font &> /dev/null; then
-  echo "Instalando Hack Nerd Font..."
-  brew install --cask font-hack-nerd-font
-else
-  echo "Hack Nerd Font ya está instalada, omitiendo..."
-fi
-
-# GNU Stow
-if ! command -v stow &> /dev/null; then
-  echo "Instalando GNU Stow..."
-  brew install stow
-else
-  echo "GNU Stow ya está instalado, omitiendo..."
-fi
-
-# Configurar dotfiles con stow
-echo "Configurando dotfiles con stow..."
-
 DOTFILES_DIR="$HOME/dev/dotfiles"
 
-# Crear directorio ~/.config si no existe
-mkdir -p "$HOME/.config"
-mkdir -p "$HOME/.config/fish/conf.d"
+# =============================================================================
+# Helper: Crear symlink idempotente
+# =============================================================================
+create_symlink() {
+  local source="$1"
+  local target="$2"
 
-# Backup y eliminar archivos existentes que serán reemplazados por symlinks
-# Solo eliminamos si NO son ya symlinks (para permitir re-ejecución del script)
+  if [ -L "$target" ]; then
+    current_link=$(readlink "$target")
+    if [ "$current_link" = "$source" ]; then
+      echo "  ✓ Symlink ya existe: $target -> $source"
+      return 0
+    else
+      echo "  Actualizando symlink: $target"
+      rm "$target"
+    fi
+  elif [ -e "$target" ]; then
+    echo "  Haciendo backup: $target -> ${target}.backup"
+    mv "$target" "${target}.backup"
+  fi
 
-# Fish config.fish
-if [[ -f "$HOME/.config/fish/config.fish" && ! -L "$HOME/.config/fish/config.fish" ]]; then
-  echo "Haciendo backup de config.fish..."
-  mv "$HOME/.config/fish/config.fish" "$HOME/.config/fish/config.fish.backup"
-fi
-
-# Fish fish_plugins
-if [[ -f "$HOME/.config/fish/fish_plugins" && ! -L "$HOME/.config/fish/fish_plugins" ]]; then
-  echo "Haciendo backup de fish_plugins..."
-  mv "$HOME/.config/fish/fish_plugins" "$HOME/.config/fish/fish_plugins.backup"
-fi
-
-# Fish conf.d/solarized-osaka.fish (reemplaza tide.fish)
-if [[ -f "$HOME/.config/fish/conf.d/solarized-osaka.fish" && ! -L "$HOME/.config/fish/conf.d/solarized-osaka.fish" ]]; then
-  echo "Haciendo backup de conf.d/solarized-osaka.fish..."
-  mv "$HOME/.config/fish/conf.d/solarized-osaka.fish" "$HOME/.config/fish/conf.d/solarized-osaka.fish.backup"
-fi
-
-# Neovim config - backup si existe y no es symlink
-if [[ -d "$HOME/.config/nvim" && ! -L "$HOME/.config/nvim" ]]; then
-  echo "Haciendo backup de configuración de nvim existente..."
-  mv "$HOME/.config/nvim" "$HOME/.config/nvim.backup.$(date +%Y%m%d_%H%M%S)"
-fi
-
-# Limpiar datos de nvim anteriores (plugins, cache, state)
-# Esto asegura una instalación limpia de los plugins de kickstart
-if [[ -d "$HOME/.local/share/nvim" ]]; then
-  echo "Limpiando plugins de nvim anteriores..."
-  rm -rf "$HOME/.local/share/nvim"
-fi
-if [[ -d "$HOME/.local/state/nvim" ]]; then
-  rm -rf "$HOME/.local/state/nvim"
-fi
-if [[ -d "$HOME/.cache/nvim" ]]; then
-  rm -rf "$HOME/.cache/nvim"
-fi
-
-# Ejecutar stow desde el directorio de dotfiles
-cd "$DOTFILES_DIR"
-stow -v --target="$HOME" .
+  ln -s "$source" "$target"
+  echo "  ✓ Symlink creado: $target -> $source"
+}
 
 # =============================================================================
-# Configurar iTerm2 con tema Solarized Osaka
+# 1. Instalar Homebrew si no está instalado
 # =============================================================================
 echo ""
-echo "Configurando iTerm2..."
-if [[ -f "$DOTFILES_DIR/scripts/iterm-setup.sh" ]]; then
-  bash "$DOTFILES_DIR/scripts/iterm-setup.sh"
+echo ">> Homebrew"
+if ! command -v brew &> /dev/null; then
+  echo "  Instalando Homebrew..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 else
-  echo "Script de iTerm2 no encontrado, omitiendo..."
+  echo "  ✓ Homebrew ya está instalado."
 fi
 
+# =============================================================================
+# 2. Instalar Neovim si no está instalado
+# =============================================================================
+echo ""
+echo ">> Neovim"
+if ! command -v nvim &> /dev/null; then
+  echo "  Instalando Neovim..."
+  brew install neovim
+else
+  echo "  ✓ Neovim ya está instalado."
+fi
+
+# =============================================================================
+# 3. Symlink de configuración de nvim (idempotente)
+# =============================================================================
+echo ""
+echo ">> Configuración de Neovim"
+mkdir -p "$HOME/.config"
+create_symlink "$DOTFILES_DIR/.config/nvim" "$HOME/.config/nvim"
+
+# Limpiar cache/state si existen (esto es seguro y mejora la consistencia)
+if [ -d "$HOME/.local/share/nvim" ] || [ -d "$HOME/.local/state/nvim" ] || [ -d "$HOME/.cache/nvim" ]; then
+  echo "  Limpiando cache/state de nvim para consistencia..."
+  rm -rf "$HOME/.local/share/nvim"
+  rm -rf "$HOME/.local/state/nvim"
+  rm -rf "$HOME/.cache/nvim"
+  echo "  ✓ Cache limpiado (los plugins se reinstalarán automáticamente)"
+fi
+
+# =============================================================================
+# 4. Instalar Fish si no está instalado
+# =============================================================================
+echo ""
+echo ">> Fish Shell"
+if ! command -v fish &> /dev/null; then
+  echo "  Instalando Fish..."
+  brew install fish
+else
+  echo "  ✓ Fish ya está instalado."
+fi
+
+# =============================================================================
+# 5. Symlink de configuración de Fish (idempotente)
+# =============================================================================
+echo ""
+echo ">> Configuración de Fish"
+create_symlink "$DOTFILES_DIR/.config/fish" "$HOME/.config/fish"
+
+# =============================================================================
+# 6. Instalar Fisher si no está instalado
+# =============================================================================
+echo ""
+echo ">> Fisher (gestor de plugins de Fish)"
+if [ ! -f "$HOME/.config/fish/functions/fisher.fish" ]; then
+  echo "  Instalando Fisher..."
+  fish -c 'curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher'
+  echo "  ✓ Fisher instalado."
+else
+  echo "  ✓ Fisher ya está instalado."
+fi
+
+# =============================================================================
+# 7. Instalar/actualizar plugins de Fisher (Tide, z, fzf, autopair)
+# =============================================================================
+echo ""
+echo ">> Plugins de Fish (Tide, z, fzf, autopair)"
+echo "  Ejecutando fisher update..."
+fish -c 'fisher update'
+echo "  ✓ Plugins instalados/actualizados."
+
+# =============================================================================
+# Resumen final
+# =============================================================================
 echo ""
 echo "========================================"
 echo "  Instalación completada!"
 echo "========================================"
 echo ""
-echo "Próximos pasos:"
-echo "  1. Reinicia iTerm2 (Cmd+Q y vuelve a abrir)"
-echo "  2. Abre Neovim y ejecuta :Lazy sync"
-echo "  3. Los colores de Fish se aplicarán automáticamente"
+echo "Neovim:"
+echo "  - Abre nvim y Lazy instalará los plugins automáticamente."
+echo ""
+echo "Fish + Tide:"
+echo "  - Los colores Solarized Osaka se aplicarán automáticamente."
+echo "  - Abre una nueva terminal con Fish para ver los cambios."
 echo ""
