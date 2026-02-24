@@ -4,31 +4,6 @@ set -e
 DOTFILES_DIR="$HOME/dev/dotfiles"
 
 # =============================================================================
-# Helper: Crear symlink idempotente
-# =============================================================================
-create_symlink() {
-  local source="$1"
-  local target="$2"
-
-  if [ -L "$target" ]; then
-    current_link=$(readlink "$target")
-    if [ "$current_link" = "$source" ]; then
-      echo "  ✓ Symlink ya existe: $target -> $source"
-      return 0
-    else
-      echo "  Actualizando symlink: $target"
-      rm "$target"
-    fi
-  elif [ -e "$target" ]; then
-    echo "  Haciendo backup: $target -> ${target}.backup"
-    mv "$target" "${target}.backup"
-  fi
-
-  ln -s "$source" "$target"
-  echo "  ✓ Symlink creado: $target -> $source"
-}
-
-# =============================================================================
 # 1. Instalar Homebrew si no está instalado
 # =============================================================================
 echo ""
@@ -41,27 +16,20 @@ else
 fi
 
 # =============================================================================
-# 2. Instalar Neovim si no está instalado
+# 2. Instalar Nerd Fonts (Hack)
 # =============================================================================
 echo ""
-echo ">> Neovim"
-if ! command -v nvim &> /dev/null; then
-  echo "  Instalando Neovim..."
-  brew install neovim
+echo ">> Nerd Fonts"
+if brew list --cask font-hack-nerd-font &> /dev/null 2>&1; then
+  echo "  ✓ Hack Nerd Font ya está instalado."
 else
-  echo "  ✓ Neovim ya está instalado."
+  echo "  Instalando Hack Nerd Font..."
+  brew install --cask font-hack-nerd-font
+  echo "  ✓ Hack Nerd Font instalado."
 fi
 
 # =============================================================================
-# 3. Symlink de configuración de nvim
-# =============================================================================
-echo ""
-echo ">> Configuración de Neovim"
-mkdir -p "$HOME/.config"
-create_symlink "$DOTFILES_DIR/.config/nvim" "$HOME/.config/nvim"
-
-# =============================================================================
-# 4. Instalar Fish si no está instalado
+# 3. Instalar Fish si no está instalado
 # =============================================================================
 echo ""
 echo ">> Fish Shell"
@@ -73,27 +41,25 @@ else
 fi
 
 # =============================================================================
-# 5. Symlink de configuración de Fish
+# 4. Configuración de Fish (copiar config.fish)
 # =============================================================================
 echo ""
 echo ">> Configuración de Fish"
-create_symlink "$DOTFILES_DIR/.config/fish" "$HOME/.config/fish"
+mkdir -p "$HOME/.config/fish"
+cp "$DOTFILES_DIR/.config/fish/config.fish" "$HOME/.config/fish/config.fish"
+echo "  ✓ config.fish copiado."
 
 # =============================================================================
-# 6. Instalar Fisher (gestor de plugins de Fish)
+# 5. Instalar Fisher (gestor de plugins de Fish)
 # =============================================================================
 echo ""
 echo ">> Fisher"
-if [ ! -f "$HOME/.config/fish/functions/fisher.fish" ]; then
-  echo "  Instalando Fisher..."
-  fish -c 'curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher'
-  echo "  ✓ Fisher instalado."
-else
-  echo "  ✓ Fisher ya está instalado."
-fi
+echo "  Instalando Fisher..."
+fish -c 'curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher'
+echo "  ✓ Fisher instalado."
 
 # =============================================================================
-# 7. Instalar plugins de Fish (Tide + Catppuccin)
+# 6. Instalar plugins de Fish (Tide + Catppuccin)
 # =============================================================================
 echo ""
 echo ">> Plugins de Fish (Tide + Catppuccin)"
@@ -101,12 +67,26 @@ fish -c 'fisher install IlanCosman/tide@v6 catppuccin/fish'
 echo "  ✓ Plugins instalados."
 
 # =============================================================================
-# 8. Configurar Tide automáticamente
+# 7. Instalar Neovim si no está instalado
 # =============================================================================
 echo ""
-echo ">> Configuración de Tide"
-fish -c 'tide configure --auto --style=Lean --prompt_colors="True color" --show_time=24-hour --lean_prompt_height="Two lines" --prompt_connection=Disconnected --prompt_spacing=Sparse --icons="Many icons" --transient=Yes'
-echo "  ✓ Tide configurado."
+echo ">> Neovim"
+if ! command -v nvim &> /dev/null; then
+  echo "  Instalando Neovim..."
+  brew install neovim
+else
+  echo "  ✓ Neovim ya está instalado."
+fi
+
+# =============================================================================
+# 8. Configuración de Neovim (copiar config)
+# =============================================================================
+echo ""
+echo ">> Configuración de Neovim"
+mkdir -p "$HOME/.config/nvim/lua/plugins"
+cp "$DOTFILES_DIR/.config/nvim/init.lua" "$HOME/.config/nvim/init.lua"
+cp -r "$DOTFILES_DIR/.config/nvim/lua/" "$HOME/.config/nvim/lua/"
+echo "  ✓ Configuración de Neovim copiada."
 
 # =============================================================================
 # Resumen final
@@ -116,10 +96,11 @@ echo "========================================"
 echo "  Instalación completada!"
 echo "========================================"
 echo ""
-echo "Neovim:"
-echo "  - Abre nvim y Lazy instalará los plugins automáticamente."
+echo "Fish:"
+echo "  - Ejecuta 'tide configure' para configurar el prompt."
 echo ""
-echo "Fish + Catppuccin:"
-echo "  - Abre una nueva terminal con Fish para ver los cambios."
-echo "  - Puedes reconfigurar Tide con 'tide configure' si lo deseas."
+echo "Neovim:"
+echo "  - Abre nvim para que lazy.nvim instale los plugins automáticamente."
+echo ""
+echo "Abre una nueva terminal para ver los cambios."
 echo ""
