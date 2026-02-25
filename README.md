@@ -5,6 +5,7 @@ My personal dotfiles for macOS.
 ## Contents
 
 - Fish shell config
+- Starship prompt config
 - Neovim config
 
 ## Requirements
@@ -25,18 +26,13 @@ This will:
 3. Install Fish shell
 4. Copy Fish config to `~/.config/fish/`
 5. Install Fisher (plugin manager for Fish)
-6. Install Fish plugins (Tide + Catppuccin)
-7. Install Neovim
-8. Copy Neovim config to `~/.config/nvim/`
+6. Install Fish plugins (Catppuccin)
+7. Install Starship prompt
+8. Copy Starship config to `~/.config/starship.toml`
+9. Install Neovim
+10. Copy Neovim config to `~/.config/nvim/`
 
 ### Post-installation
-
-After running the install script:
-
-```fish
-# Configure Tide prompt
-tide configure
-```
 
 Open Neovim to let lazy.nvim install plugins automatically.
 
@@ -56,8 +52,9 @@ Use `sync.sh` to keep your configs in sync:
 
 - [Fish shell](https://fishshell.com/) - Smart and user-friendly command line shell
 - [Fisher](https://github.com/jorgebucaran/fisher) - Plugin manager for Fish
-- [Tide](https://github.com/IlanCosman/tide) - Modern prompt for Fish
+- [Starship](https://starship.rs/) - Cross-shell prompt
 - [Catppuccin for Fish](https://github.com/catppuccin/fish) - Soothing pastel theme
+- [Catppuccin for Starship](https://github.com/catppuccin/starship) - Soothing pastel theme for prompt
 
 ## Neovim
 

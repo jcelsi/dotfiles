@@ -5,6 +5,7 @@ DOTFILES_DIR="$HOME/dev/dotfiles"
 
 # Archivos/directorios a sincronizar
 FISH_CONFIG="$HOME/.config/fish/config.fish"
+STARSHIP_CONFIG="$HOME/.config/starship.toml"
 NVIM_DIR="$HOME/.config/nvim"
 
 usage() {
@@ -22,6 +23,10 @@ push_configs() {
   mkdir -p "$HOME/.config/fish"
   cp "$DOTFILES_DIR/.config/fish/config.fish" "$FISH_CONFIG"
   echo "  ✓ Fish config copiado"
+  
+  # Starship
+  cp "$DOTFILES_DIR/.config/starship.toml" "$STARSHIP_CONFIG"
+  echo "  ✓ Starship config copiado"
   
   # Neovim
   mkdir -p "$HOME/.config/nvim/lua/plugins"
@@ -42,6 +47,14 @@ pull_configs() {
     echo "  ✓ Fish config copiado"
   else
     echo "  ⚠ Fish config no encontrado en $FISH_CONFIG"
+  fi
+  
+  # Starship
+  if [ -f "$STARSHIP_CONFIG" ]; then
+    cp "$STARSHIP_CONFIG" "$DOTFILES_DIR/.config/starship.toml"
+    echo "  ✓ Starship config copiado"
+  else
+    echo "  ⚠ Starship config no encontrado en $STARSHIP_CONFIG"
   fi
   
   # Neovim (solo init.lua y lua/, no plugins instalados ni lazy-lock)

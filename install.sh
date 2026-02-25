@@ -59,15 +59,36 @@ fish -c 'curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/fun
 echo "  ✓ Fisher instalado."
 
 # =============================================================================
-# 6. Instalar plugins de Fish (Tide + Catppuccin)
+# 6. Instalar plugins de Fish (Catppuccin)
 # =============================================================================
 echo ""
-echo ">> Plugins de Fish (Tide + Catppuccin)"
-fish -c 'fisher install IlanCosman/tide@v6 catppuccin/fish'
-echo "  ✓ Plugins instalados."
+echo ">> Plugins de Fish (Catppuccin)"
+fish -c 'fisher install catppuccin/fish'
+echo "  ✓ Plugin instalado."
 
 # =============================================================================
-# 7. Instalar Neovim si no está instalado
+# 7. Instalar Starship si no está instalado
+# =============================================================================
+echo ""
+echo ">> Starship"
+if ! command -v starship &> /dev/null; then
+  echo "  Instalando Starship..."
+  brew install starship
+else
+  echo "  ✓ Starship ya está instalado."
+fi
+
+# =============================================================================
+# 8. Configuración de Starship (copiar starship.toml)
+# =============================================================================
+echo ""
+echo ">> Configuración de Starship"
+mkdir -p "$HOME/.config"
+cp "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
+echo "  ✓ starship.toml copiado."
+
+# =============================================================================
+# 9. Instalar Neovim si no está instalado
 # =============================================================================
 echo ""
 echo ">> Neovim"
@@ -79,7 +100,7 @@ else
 fi
 
 # =============================================================================
-# 8. Configuración de Neovim (copiar config)
+# 10. Configuración de Neovim (copiar config)
 # =============================================================================
 echo ""
 echo ">> Configuración de Neovim"
@@ -95,9 +116,6 @@ echo ""
 echo "========================================"
 echo "  Instalación completada!"
 echo "========================================"
-echo ""
-echo "Fish:"
-echo "  - Ejecuta 'tide configure' para configurar el prompt."
 echo ""
 echo "Neovim:"
 echo "  - Abre nvim para que lazy.nvim instale los plugins automáticamente."
