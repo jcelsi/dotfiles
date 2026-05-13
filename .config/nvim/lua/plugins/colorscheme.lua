@@ -1,19 +1,26 @@
 return {
-  -- Add Catppuccin plugin
+  -- Tokyo Night colorscheme
   {
-    "catppuccin/nvim",
-    name = "catppuccin",
+    "folke/tokyonight.nvim",
     priority = 1000,
     opts = {
-      flavour = "mocha",
+      style = "night",
+      transparent = false,
+      terminal_colors = true,
+      styles = {
+        comments = { italic = true },
+        keywords = { italic = true },
+        sidebars = "dark",
+        floats = "dark",
+      },
     },
   },
 
-  -- Configure LazyVim to use Catppuccin
+  -- Configure LazyVim to use Tokyo Night
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = "catppuccin",
+      colorscheme = "tokyonight",
     },
   },
 }
